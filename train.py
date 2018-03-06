@@ -17,7 +17,7 @@ log = infolog.log
 
 
 def get_git_commit():
-  subprocess.check_output(['git', 'diff-index', '--quiet', 'HEAD'])   # Verify client is clean
+  subprocess.check_output(['git', 'diff-index', '--quiet', 'HEAD'])  # Verify client is clean
   commit = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip()[:10]
   log('Git commit: %s' % commit)
   return commit
@@ -94,7 +94,8 @@ def train(log_dir, args):
         time_window.append(time.time() - start_time)
         loss_window.append(loss)
         message = 'Step %-7d [%.03f sec/step, loss=%.05f, avg_loss=%.05f]' % (
-          step, time_window.average, loss, loss_window.average)
+          step, time_window.average, loss, loss_window.average
+        )
         log(message, slack=(step % args.checkpoint_interval == 0))
 
         if loss > 100 or math.isnan(loss):
@@ -109,12 +110,14 @@ def train(log_dir, args):
           log('Saving checkpoint to: %s-%d' % (checkpoint_path, step))
           saver.save(sess, checkpoint_path, global_step=step)
           log('Saving audio and alignment...')
-          input_seq, spectrogram, alignment = sess.run([
-            model.inputs[0], model.linear_outputs[0], model.alignments[0]])
+          input_seq, spectrogram, alignment = sess.run([model.inputs[0], model.linear_outputs[0], model.alignments[0]])
           waveform = audio.inv_spectrogram(spectrogram.T)
           audio.save_wav(waveform, os.path.join(log_dir, 'step-%d-audio.wav' % step))
-          plot.plot_alignment(alignment, os.path.join(log_dir, 'step-%d-align.png' % step),
-            info='%s, %s, %s, step=%d, loss=%.5f' % (args.model, commit, time_string(), step, loss))
+          plot.plot_alignment(
+            alignment,
+            os.path.join(log_dir, 'step-%d-align.png' % step),
+            info='%s, %s, %s, step=%d, loss=%.5f' % (args.model, commit, time_string(), step, loss)
+          )
           log('Input: %s' % sequence_to_text(input_seq))
 
     except Exception as e:
@@ -129,13 +132,12 @@ def main():
   parser.add_argument('--input', default='training/train.txt')
   parser.add_argument('--model', default='tacotron')
   parser.add_argument('--name', help='Name of the run. Used for logging. Defaults to model name.')
-  parser.add_argument('--hparams', default='',
-    help='Hyperparameter overrides as a comma-separated list of name=value pairs')
+  parser.add_argument(
+    '--hparams', default='', help='Hyperparameter overrides as a comma-separated list of name=value pairs'
+  )
   parser.add_argument('--restore_step', type=int, help='Global step to restore from checkpoint.')
-  parser.add_argument('--summary_interval', type=int, default=100,
-    help='Steps between running summary ops.')
-  parser.add_argument('--checkpoint_interval', type=int, default=1000,
-    help='Steps between writing checkpoints.')
+  parser.add_argument('--summary_interval', type=int, default=100, help='Steps between running summary ops.')
+  parser.add_argument('--checkpoint_interval', type=int, default=1000, help='Steps between writing checkpoints.')
   parser.add_argument('--slack_url', help='Slack webhook URL to get periodic reports.')
   parser.add_argument('--tf_log_level', type=int, default=1, help='Tensorflow C++ log level.')
   parser.add_argument('--git', action='store_true', help='If set, verify that the client is clean.')

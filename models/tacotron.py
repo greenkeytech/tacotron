@@ -8,11 +8,10 @@ from .modules import encoder_cbhg, post_cbhg, prenet
 from .rnn_wrappers import DecoderPrenetWrapper, ConcatOutputAndAttentionWrapper
 
 
-
 class Tacotron():
+
   def __init__(self, hparams):
     self._hparams = hparams
-
 
   def initialize(self, inputs, input_lengths, mel_targets=None, linear_targets=None):
     '''Initializes the model for inference.
@@ -38,12 +37,12 @@ class Tacotron():
 
       # Embeddings
       embedding_table = tf.get_variable(
-        'embedding', [len(symbols), 256], dtype=tf.float32,
-        initializer=tf.truncated_normal_initializer(stddev=0.5))
-      embedded_inputs = tf.nn.embedding_lookup(embedding_table, inputs)           # [N, T_in, 256]
+        'embedding', [len(symbols), 256], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.5)
+      )
+      embedded_inputs = tf.nn.embedding_lookup(embedding_table, inputs)  # [N, T_in, 256]
 
       # Encoder
-      prenet_outputs = prenet(embedded_inputs, is_training)                       # [N, T_in, 128]
+      prenet_outputs = prenet(embedded_inputs, is_training)  # [N, T_in, 128]
       encoder_outputs = encoder_cbhg(prenet_outputs, input_lengths, is_training)  # [N, T_in, 256]
 
       # Attention
@@ -51,17 +50,19 @@ class Tacotron():
         DecoderPrenetWrapper(GRUCell(256), is_training),
         BahdanauAttention(256, encoder_outputs),
         alignment_history=True,
-        output_attention=False)                                                  # [N, T_in, 256]
+        output_attention=False
+      )  # [N, T_in, 256]
 
       # Concatenate attention context vector and RNN cell output into a 512D vector.
-      concat_cell = ConcatOutputAndAttentionWrapper(attention_cell)              # [N, T_in, 512]
+      concat_cell = ConcatOutputAndAttentionWrapper(attention_cell)  # [N, T_in, 512]
 
       # Decoder (layers specified bottom to top):
-      decoder_cell = MultiRNNCell([
-          OutputProjectionWrapper(concat_cell, 256),
-          ResidualWrapper(GRUCell(256)),
-          ResidualWrapper(GRUCell(256))
-        ], state_is_tuple=True)                                                  # [N, T_in, 256]
+      decoder_cell = MultiRNNCell(
+        [OutputProjectionWrapper(concat_cell, 256),
+         ResidualWrapper(GRUCell(256)),
+         ResidualWrapper(GRUCell(256))],
+        state_is_tuple=True
+      )  # [N, T_in, 256]
 
       # Project onto r mel spectrograms (predict r outputs at each RNN step):
       output_cell = OutputProjectionWrapper(decoder_cell, hp.num_mels * hp.outputs_per_step)
@@ -73,15 +74,15 @@ class Tacotron():
         helper = TacoTestHelper(batch_size, hp.num_mels, hp.outputs_per_step)
 
       (decoder_outputs, _), final_decoder_state, _ = tf.contrib.seq2seq.dynamic_decode(
-        BasicDecoder(output_cell, helper, decoder_init_state),
-        maximum_iterations=hp.max_iters)                                        # [N, T_out/r, M*r]
+        BasicDecoder(output_cell, helper, decoder_init_state), maximum_iterations=hp.max_iters
+      )  # [N, T_out/r, M*r]
 
       # Reshape outputs to be one output per entry
-      mel_outputs = tf.reshape(decoder_outputs, [batch_size, -1, hp.num_mels]) # [N, T_out, M]
+      mel_outputs = tf.reshape(decoder_outputs, [batch_size, -1, hp.num_mels])  # [N, T_out, M]
 
       # Add post-processing CBHG:
-      post_outputs = post_cbhg(mel_outputs, hp.num_mels, is_training)           # [N, T_out, 256]
-      linear_outputs = tf.layers.dense(post_outputs, hp.num_freq)               # [N, T_out, F]
+      post_outputs = post_cbhg(mel_outputs, hp.num_mels, is_training)  # [N, T_out, 256]
+      linear_outputs = tf.layers.dense(post_outputs, hp.num_freq)  # [N, T_out, F]
 
       # Grab alignments from the final decoder state:
       alignments = tf.transpose(final_decoder_state[0].alignment_history.stack(), [1, 2, 0])
@@ -105,7 +106,6 @@ class Tacotron():
       log('  postnet out:             %d' % post_outputs.shape[-1])
       log('  linear out:              %d' % linear_outputs.shape[-1])
 
-
   def add_loss(self):
     '''Adds loss to the model. Sets "loss" field. initialize must have been called.'''
     with tf.variable_scope('loss') as scope:
@@ -114,9 +114,8 @@ class Tacotron():
       l1 = tf.abs(self.linear_targets - self.linear_outputs)
       # Prioritize loss for frequencies under 3000 Hz.
       n_priority_freq = int(3000 / (hp.sample_rate * 0.5) * hp.num_freq)
-      self.linear_loss = 0.5 * tf.reduce_mean(l1) + 0.5 * tf.reduce_mean(l1[:,:,0:n_priority_freq])
+      self.linear_loss = 0.5 * tf.reduce_mean(l1) + 0.5 * tf.reduce_mean(l1[:, :, 0:n_priority_freq])
       self.loss = self.mel_loss + self.linear_loss
-
 
   def add_optimizer(self, global_step):
     '''Adds optimizer. Sets "gradients" and "optimize" fields. add_loss must have been called.
@@ -138,8 +137,7 @@ class Tacotron():
       # Add dependency on UPDATE_OPS; otherwise batchnorm won't work correctly. See:
       # https://github.com/tensorflow/tensorflow/issues/1122
       with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-        self.optimize = optimizer.apply_gradients(zip(clipped_gradients, variables),
-          global_step=global_step)
+        self.optimize = optimizer.apply_gradients(zip(clipped_gradients, variables), global_step=global_step)
 
 
 def _learning_rate_decay(init_lr, global_step):

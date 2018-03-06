@@ -5,7 +5,6 @@ import os
 from hparams import hparams
 from util import audio
 
-
 _max_out_length = 700
 _end_buffer = 0.05
 _min_confidence = 90
@@ -17,6 +16,7 @@ books = [
   # 'LifeOnTheMississippi',
   # 'TheAdventuresOfTomSawyer',
 ]
+
 
 def build_from_path(in_dir, out_dir, num_workers=1, tqdm=lambda x: x):
   executor = ProcessPoolExecutor(max_workers=num_workers)

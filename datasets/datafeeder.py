@@ -8,7 +8,6 @@ import traceback
 from text import cmudict, text_to_sequence
 from util.infolog import log
 
-
 _batches_per_group = 32
 _p_cmudict = 0.5
 _pad = 0
@@ -55,18 +54,18 @@ class DataFeeder(threading.Thread):
     if hparams.use_cmudict:
       cmudict_path = os.path.join(self._datadir, 'cmudict-0.7b')
       if not os.path.isfile(cmudict_path):
-        raise Exception('If use_cmudict=True, you must download ' +
-          'http://svn.code.sf.net/p/cmusphinx/code/trunk/cmudict/cmudict-0.7b to %s'  % cmudict_path)
+        raise Exception(
+          'If use_cmudict=True, you must download ' +
+          'http://svn.code.sf.net/p/cmusphinx/code/trunk/cmudict/cmudict-0.7b to %s' % cmudict_path
+        )
       self._cmudict = cmudict.CMUDict(cmudict_path, keep_ambiguous=False)
       log('Loaded CMUDict with %d unambiguous entries' % len(self._cmudict))
     else:
       self._cmudict = None
 
-
   def start_in_session(self, session):
     self._session = session
     self.start()
-
 
   def run(self):
     try:
@@ -75,7 +74,6 @@ class DataFeeder(threading.Thread):
     except Exception as e:
       traceback.print_exc()
       self._coord.request_stop(e)
-
 
   def _enqueue_next_group(self):
     start = time.time()
@@ -87,14 +85,13 @@ class DataFeeder(threading.Thread):
 
     # Bucket examples based on similar output sequence length for efficiency:
     examples.sort(key=lambda x: x[-1])
-    batches = [examples[i:i+n] for i in range(0, len(examples), n)]
+    batches = [examples[i:i + n] for i in range(0, len(examples), n)]
     random.shuffle(batches)
 
     log('Generated %d batches of size %d in %.03f sec' % (len(batches), n, time.time() - start))
     for batch in batches:
       feed_dict = dict(zip(self._placeholders, _prepare_batch(batch, r)))
       self._session.run(self._enqueue_op, feed_dict=feed_dict)
-
 
   def _get_next_example(self):
     '''Loads a single example (input, mel_target, linear_target, cost) from disk'''
@@ -112,7 +109,6 @@ class DataFeeder(threading.Thread):
     linear_target = np.load(os.path.join(self._datadir, meta[0]))
     mel_target = np.load(os.path.join(self._datadir, meta[1]))
     return (input_data, mel_target, linear_target, len(linear_target))
-
 
   def _maybe_get_arpabet(self, word):
     arpabet = self._cmudict.lookup(word)
@@ -143,7 +139,7 @@ def _pad_input(x, length):
 
 
 def _pad_target(t, length):
-  return np.pad(t, [(0, length - t.shape[0]), (0,0)], mode='constant', constant_values=_pad)
+  return np.pad(t, [(0, length - t.shape[0]), (0, 0)], mode='constant', constant_values=_pad)
 
 
 def _round_up(x, multiple):

@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-
 # Default hyperparameters:
 hparams = tf.contrib.training.HParams(
   # Comma-separated list of cleaners to run on text prior to training and eval. For non-English
@@ -32,7 +31,7 @@ hparams = tf.contrib.training.HParams(
   # Eval:
   max_iters=200,
   griffin_lim_iters=60,
-  power=1.5,              # Power to raise magnitudes to prior to Griffin-Lim
+  power=1.5,  # Power to raise magnitudes to prior to Griffin-Lim
 )
 
 

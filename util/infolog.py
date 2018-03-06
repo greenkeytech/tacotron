@@ -4,7 +4,6 @@ import json
 from threading import Thread
 from urllib.request import Request, urlopen
 
-
 _format = '%Y-%m-%d %H:%M:%S.%f'
 _file = None
 _run_name = None
@@ -40,11 +39,14 @@ def _close_logfile():
 def _send_slack(msg):
   req = Request(_slack_url)
   req.add_header('Content-Type', 'application/json')
-  urlopen(req, json.dumps({
-    'username': 'tacotron',
-    'icon_emoji': ':taco:',
-    'text': '*%s*: %s' % (_run_name, msg)
-  }).encode())
+  urlopen(
+    req,
+    json.dumps({
+      'username': 'tacotron',
+      'icon_emoji': ':taco:',
+      'text': '*%s*: %s' % (_run_name, msg)
+    }).encode()
+  )
 
 
 atexit.register(_close_logfile)

@@ -6,6 +6,7 @@ from .modules import prenet
 
 class DecoderPrenetWrapper(RNNCell):
   '''Runs RNN inputs through a prenet before sending them to the cell.'''
+
   def __init__(self, cell, is_training):
     super(DecoderPrenetWrapper, self).__init__()
     self._cell = cell
@@ -27,7 +28,6 @@ class DecoderPrenetWrapper(RNNCell):
     return self._cell.zero_state(batch_size, dtype)
 
 
-
 class ConcatOutputAndAttentionWrapper(RNNCell):
   '''Concatenates RNN cell output with the attention context vector.
 
@@ -35,6 +35,7 @@ class ConcatOutputAndAttentionWrapper(RNNCell):
   attention_layer_size=None and output_attention=False. Such a cell's state will include an
   "attention" field that is the context vector.
   '''
+
   def __init__(self, cell):
     super(ConcatOutputAndAttentionWrapper, self).__init__()
     self._cell = cell

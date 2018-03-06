@@ -1,4 +1,5 @@
 class ValueWindow():
+
   def __init__(self, window_size=100):
     self._window_size = window_size
     self._values = []

@@ -4,7 +4,6 @@ from hparams import hparams, hparams_debug_string
 import os
 from synthesizer import Synthesizer
 
-
 html_body = '''<html><title>Demo</title>
 <style>
 body {padding: 16px; font-family: sans-serif; font-size: 14px; color: #444}
@@ -58,12 +57,14 @@ function synthesize(text) {
 
 
 class UIResource:
+
   def on_get(self, req, res):
     res.content_type = 'text/html'
     res.body = html_body
 
 
 class SynthesisResource:
+
   def on_get(self, req, res):
     if not req.params.get('text'):
       raise falcon.HTTPBadRequest()
@@ -76,14 +77,14 @@ api = falcon.API()
 api.add_route('/synthesize', SynthesisResource())
 api.add_route('/', UIResource())
 
-
 if __name__ == '__main__':
   from wsgiref import simple_server
   parser = argparse.ArgumentParser()
   parser.add_argument('--checkpoint', required=True, help='Full path to model checkpoint')
   parser.add_argument('--port', type=int, default=9000)
-  parser.add_argument('--hparams', default='',
-    help='Hyperparameter overrides as a comma-separated list of name=value pairs')
+  parser.add_argument(
+    '--hparams', default='', help='Hyperparameter overrides as a comma-separated list of name=value pairs'
+  )
   args = parser.parse_args()
   os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
   hparams.parse(args.hparams)

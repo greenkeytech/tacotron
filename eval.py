@@ -4,7 +4,6 @@ import re
 from hparams import hparams, hparams_debug_string
 from synthesizer import Synthesizer
 
-
 sentences = [
   # From July 8, 2017 New York Times:
   'Scientists at the CERN laboratory say they have discovered a new particle.',
@@ -41,8 +40,9 @@ def run_eval(args):
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('--checkpoint', required=True, help='Path to model checkpoint')
-  parser.add_argument('--hparams', default='',
-    help='Hyperparameter overrides as a comma-separated list of name=value pairs')
+  parser.add_argument(
+    '--hparams', default='', help='Hyperparameter overrides as a comma-separated list of name=value pairs'
+  )
   args = parser.parse_args()
   os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
   hparams.parse(args.hparams)

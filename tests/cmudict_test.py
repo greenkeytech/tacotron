@@ -1,7 +1,6 @@
 import io
 from text import cmudict
 
-
 test_data = '''
 ;;; # CMUdict  --  Major Version: 0.07
 )PAREN  P ER EH N
